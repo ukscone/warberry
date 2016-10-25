@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """
 This file is part of the WarBerry tool.
 Copyright (c) 2016 Yiannis Ioannides (@sec_groundzero).
@@ -14,7 +16,6 @@ GNU General Public License for more details.
 """
 
 
-#!/usr/bin/python
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 logging.info("finished")
@@ -61,6 +62,7 @@ from src.core.enumeration.os_enum import *
 from src.core.enumeration.services_enum import *
 from src.core.enumeration.wifi_enum import *
 from src.core.exploits.responder_poison import *
+from src.core.enumeration.zones import *
 from src.utils.info_banners import *
 from src.utils.console_colors import *
 from src.utils import *
@@ -90,6 +92,7 @@ v4.0                              @sec_groundzero
     parser.add_option("-N", "--name", action="store", dest="name", default="WarBerry",help="Hostname to use." + bcolors.WARNING + " Default: Auto" + bcolors.ENDC)
     parser.add_option("-i", "--intensity", action="store", dest="intensity", default="-T1", help="Port scan intensity." + bcolors.WARNING + " Default: T1" + bcolors.ENDC,choices=['-T1', '-T2', '-T3', '-T4'])
     parser.add_option("-P", "--poison", action="store_false",dest="poison",default=True, help="Turn Poisoning off."+ bcolors.WARNING + " Default: On" + bcolors.ENDC)
+    parser.add_option("-t", "--time", action="store", dest="time", default=900, type=int, help="Responder Timeout Seconds")
     parser.add_option("-Q", "--quick", action="store_true", dest="fast", default=False, help="Scan using threads." + bcolors.WARNING + " Default: Off" + bcolors.ENDC)
     parser.add_option("-H", "--hostname", action="store_false", dest="hostname", default= True, help="Do not change WarBerry hostname" + bcolors.WARNING + " Default: Off" + bcolors.ENDC)
     parser.add_option("-e", "--enumeration", action="store_true",dest="enum", default=False, help="Disable enumeration mode." + bcolors.WARNING + " Default: Off" + bcolors.ENDC)
@@ -118,7 +121,14 @@ v4.0                              @sec_groundzero
             print bcolors.FAIL + '*** You are not running as root and some modules will fail ***\nRun again with sudo.' + bcolors.ENDC
             sys.exit(-1)
         dhcp_check()
-        iface = options.iface
+        if (os.path.isfile('/sys/class/net/' + options.iface + '/carrier') == True):
+            iface = options.iface
+        else:
+            for ifaces in os.listdir("/sys/class/net/"):
+                if ifaces[0] == "e":
+                    file_iface = open("/sys/class/net/" + ifaces + "/carrier")
+                    if file_iface.readline()[0] == "1":
+                        iface = ifaces
         host_name = options.name
         int_ip = iprecon(iface)
         if (int_ip == None):
@@ -128,10 +138,13 @@ v4.0                              @sec_groundzero
                 netmask = netmask_recon(iface)
                 with open('../Results/running_status', 'a') as status:
                     status.write("Entering poisoning mode\n")
-                    poison(iface)
+                    poison_time = options.time
+                    poison(iface, poison_time)
             else:
                 netmask = netmask_recon(iface)
+                CIDR = subnet(int_ip, netmask)
                # external_IP_recon()
+                scope_definition(iface, CIDR)
                 with open('../Results/running_status', 'a') as status:
                     status.write("Completed IP Recon\n")
                 packets = options.packets
@@ -139,8 +152,7 @@ v4.0                              @sec_groundzero
                 with open('../Results/running_status', 'a') as status:
                     status.write("Completed sniffing network packets\n")
                 pcap_parser()
-                CIDR = subnet(int_ip, netmask)
-                #scope_definition(iface, CIDR)
+
                 hostnames(CIDR)
                 with open('../Results/running_status', 'a') as status:
                     status.write("Completed hostnames search\n")
@@ -154,61 +166,70 @@ v4.0                              @sec_groundzero
                 if options.reconmode == False:
                     intensity = options.intensity
                     if options.fast == False:
-                        single_port_scanner(CIDR, intensity)
+                        single_port_scanner(CIDR, intensity, iface)
                     else:
-                        thread_port_scanner(CIDR, intensity)
+                        thread_port_scanner(CIDR, intensity, iface)
                     with open('../Results/running_status', 'a') as status:
                         status.write("Completed Port Scanning\n")
                     if options.enum == False:
-                        shares_enum()
+                        shares_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed Enumerating Shares\n")
-                        smb_users()
+                        smb_users(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed Enumerating Users\n")
-                        domains_enum()
-                        with open('../Results/running_status', 'a') as status:
-                            status.write("Completed Enumerating Domains\n")
                         webs_prep()
-                        http_title_enum()
+                        http_title_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed Enumerating HTTP Titles\n")
-                        nfs_enum()
+                        nfs_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed NFS Enumeration\n")
-                        waf_enum()
+                        waf_enum(iface)
+                        with open('../Results/running_status', 'a') as status:
+                            status.write("Completed Robots.txt Enumeration\n")
+                        robots_txt()
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed WAF Enumeration\n")
-                        mysql_enum()
+                        mysql_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                                 status.write("Completed MYSQL Enumeration\n")
-                        mssql_enum()
+                        mssql_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed MSSQL Enumeration\n")
-                        ftp_enum()
+                        ftp_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed FTP Enumeration\n")
-                        snmp_enum()
+                        snmp_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed SNMP Enumeration\n")
-                        clamav_enum()
+                        clamav_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed ClamAV Enumeration\n")
-                        informix_enum()
+                        informix_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed Informix DB Enumeration\n")
-                        informix_tables()
+                        informix_tables(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed Informix Tables Enumeration\n")
-                        sip_methods_enum()
+                        sip_methods_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed SIP Methods Enumeration\n")
-                        sip_users_enum()
+                        sip_users_enum(iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed SIP Users Enumeration\n")
-                        os_enum(CIDR)
+                        aggressive_vpn()
+                        with open('../Results/running_status', 'a') as status:
+                            status.write("Completed Aggressive VPN Enumeration\n")
+                        os_enum(CIDR,iface)
                         with open('../Results/running_status', 'a') as status:
                             status.write("Completed OS Enumeration\n")
+                        #enum4linux()
+                        #with open('../Results/running_status', 'a') as status:
+                        #    status.write("Completed enum4linux Enumeration\n")
+                        zone_transfers(CIDR)
+                        with open('../Results/running_status', 'a') as status:
+                            status.write("Completed zones Enumeration\n")
                     if options.btooth == True:
                         bluetooth_enum()
                         with open('../Results/running_status', 'a') as status:
@@ -223,7 +244,8 @@ v4.0                              @sec_groundzero
                 if options.poison == True:
                     with open('../Results/running_status', 'a') as status:
                         status.write("Entering poisoning mode\n")
-                        poison(iface)
+                        poison_time = options.time
+                        poison(iface, poison_time)
 
     elif options.attacktype == '-T' or options.attacktype == '--toptcp':
         subprocess.call('clear', shell=True)
@@ -236,7 +258,7 @@ v4.0                              @sec_groundzero
         external_IP_recon()
         CIDR = subnet(int_ip, netmask)
         #scope_definition(iface, CIDR)
-        top_ports_scanner(CIDR, options.intensity)
+        top_ports_scanner(CIDR, options.intensity, iface)
         print bcolors.TITLE + "All scripts completed. Check the /Results directory" + bcolors.ENDC
 
     elif options.attacktype == '-B' or options.attacktype == '--tcpudp':
@@ -251,9 +273,9 @@ v4.0                              @sec_groundzero
         CIDR = subnet(int_ip, netmask)
         #scope_definition(iface, CIDR)
         if options.fast == True:
-            tcpudp_thread_scanner(CIDR,options.intensity)
+            tcpudp_thread_scanner(CIDR,options.intensity, iface)
         else:
-            tcpudp_scanner(CIDR, options.intensity)
+            tcpudp_scanner(CIDR, options.intensity,iface)
         print bcolors.TITLE + "All scripts completed. Check the /Results directory" + bcolors.ENDC
     elif options.attacktype == '-F' or options.attacktype == '--fulltcp':
         subprocess.call('clear', shell=True)
@@ -265,9 +287,9 @@ v4.0                              @sec_groundzero
         CIDR = subnet(int_ip, netmask)
         #scope_definition(iface, CIDR)
         if options.fast == True:
-            full_thread_scanner(CIDR,options.intensity)
+            full_thread_scanner(CIDR,options.intensity, iface)
         else:
-            full_scanner(CIDR, options.intensity)
+            full_scanner(CIDR, options.intensity, iface)
         print bcolors.TITLE + "All scripts completed. Check the /Results directory" + bcolors.ENDC
     elif options.attacktype == '-S' or options.attacktype == '--sniffer':
         iface = options.iface
@@ -276,13 +298,18 @@ v4.0                              @sec_groundzero
         sniffer(iface, packets)
 
 
-
 if __name__ == '__main__':
 
     try:
         main()
     except KeyboardInterrupt:
-        subprocess.call("sudo mkdir ../Results/Responder_logs", shell=True)
-        subprocess.call("sudo mv ../Tools/Responder/logs/* ../Results/Responder_logs/",shell=True)
-        subprocess.call('clear', shell=True)
-        banner_full()
+        try:
+            if os.path.exists("../Results") == False:
+                subprocess.call("sudo mkdir ../Results", shell = True)
+                subprocess.call("sudo mkdir  ../Results/Responder_logs", shell=True)
+                subprocess.call("sudo mv  ../Tools/Responder/logs/* ../Results/Responder_logs/", shell=True)
+        finally:
+            subprocess.call("clear", shell=True)
+            banner_full()
+
+

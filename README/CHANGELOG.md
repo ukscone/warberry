@@ -4,6 +4,34 @@
 * Vlans enumeration
 * Support for IPv6
 
+## Version 4c1
+
+- Added a timeout for responder using the -t switch
+- Fixed a bug in the zones enumeration
+- Added robots.txt enumeration
+
+
+## Version 4c
+
+* Removed duplicate code
+* Added VPN Aggressive mode scanning
+* Added SMBclient & enum4linux installation
+* Added Zone Transfer Enumeration
+* Updated wiki & bootstrap 
+
+
+## Version 4b
+
+* Fixed an error in the output when interface is not available"
+* Changed the way that interfaces are handled
+
+## Version 4a
+
+* nmap scans are now performed based on the interface chose at start
+* various bug fixes
+* bootstrap file update
+* WiFi and Bluetooth scans are now optional
+
 
 ## Version 4
 

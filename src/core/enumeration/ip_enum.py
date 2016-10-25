@@ -38,7 +38,7 @@ def iprecon(ifname):
             subprocess.call('clear', shell=True)
             banner_full()
             print bcolors.FAIL + "Interface %s seems to be down. Try Running with -I to specify an interface" %ifname + bcolors.ENDC
-
+            exit()
         netmask = socket.inet_ntoa(fcntl.ioctl(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), 35099, struct.pack('256s', ifname))[20:24])
 
         if not ip_validate(int_ip) and int_ip!="169.254.253.251":
@@ -46,7 +46,6 @@ def iprecon(ifname):
             netmask = netmask_recon(ifname)
             external_IP_recon()
             CIDR = subnet(int_ip, netmask)
-            scope_definition(ifname, CIDR)
             return int_ip
         else:
 

@@ -1,90 +1,90 @@
-#!/usr/bin/env bash
-
-##
-## WarBerry bootstrap script
-## Ver. 1.0.0
-##
-
-APT_GET_CMD=$(which apt-get)
-WARBERRYDIR=/home/pi/WarBerry
-GITREPOS=("https://github.com/DanMcInerney/net-creds.git"
-          "https://github.com/stasinopoulos/commix.git"
-          "https://github.com/sqlmapproject/sqlmap.git"
-          "https://github.com/CoreSecurity/impacket.git"
-          "https://github.com/samratashok/nishang.git"
-          "https://github.com/SpiderLabs/Responder.git"
-          "https://github.com/sophron/wifiphisher.git"
-          "https://github.com/Dionach/CMSmap.git"
-          "https://github.com/PowerShellMafia/PowerSploit.git"
-          "https://github.com/offensive-security/exploit-database.git")
-
-echo """
-
-        STARTING WarBerry INSTALLATION SCRIPT...
-"""
-
 if [ "$(id -u)" != "0" ]; then
 	echo "ERROR: Sorry, you are not root. Run this script as root or with sudo."
 	exit 1
 fi
 
-echo "CREATING DIRECTORIES..."
-mkdir -p $WARBERRYDIR/{Results,Tools}
-
-if [[ ! -z $APT_GET_CMD ]]; then
-    echo """
-        PERFORMING BASIC DEPENDENCIES INSTALLATION...
+echo """
+        Creating necessary directories...
     """
-    apt-get -y update;
-    apt-get -y install nbtscan   \
-                    curl         \
-                    tcpdump      \
-                    nmap         \
-                    ppp          \
-                    sg3-utils    \
-                    netdiscover  \
-                    macchanger   \
-                    onesixtyone  \
-                    nikto        \
-                    hydra        \
-                    john         \
-                    w3af-console \
-                    python-dev   \
-                    python-pip   \
-                    cryptcat     \
-                    ike-scan     \
-                    libssl-dev   \
-                    make         \
-                    g++          \
-                    iw           \
-		    xprobe2      \
-		    bridge-utils \
-                    ettercap-text-only;
 
-    echo """
-        BOOTSTRAPPING PYTHON UTILS...
+cd ..
+mkdir WarBerry
+mv warberry/ WarBerry/
+cd WarBerry/
+mkdir Results
+mkdir Tools
+
+echo """
+        Updating Distro...
     """
-    pip install --upgrade pip;
 
-    echo """
-        INSTALLING PYTHON PACKAGES...
+apt-get update -y
+
+
+echo """
+        Installing necessary tools...
     """
-    pip2 install scapy python-nmap ipaddress netaddr optparse-pretty pybluez;
 
-    echo """
-        CLONING GIT PACKAGES TO WarBerry/Tools directory...
+apt-get install nbtscan -y
+apt-get install python-scapy -y
+apt-get install tcpdump -y
+apt-get install nmap -y 
+apt-get install python-nmap -y 
+apt-get install python-bluez -y
+apt-get install smbclient -y
+apt-get install samba -y
+apt-get install samba_common_bin -y
+apt-get install unzip -y
+
+
+pip install optparse-pretty 
+pip install netaddr 
+pip install ipaddress 
+
+apt-get install ppp -y
+apt-get install xprobe2 -y
+apt-get install sg3-utils -y
+apt-get install netdiscover -y
+apt-get install macchanger -y
+
+wget http://seclists.org/nmap-dev/2016/q2/att-201/clamav-exec.nse -O /usr/share/nmap/scripts/clamav-exec.nse
+wget https://labs.portcullis.co.uk/download/enum4linux-0.8.9.tar.gz -O /home/pi/WarBerry/Tools/
+tar -zxvf enum4linux-0.8.9.tar.gz
+mv enum4linux-0.8.9 enum4linux
+
+
+
+cd /home/pi/WarBerry/Tools
+
+
+echo """
+        Cloning some awesome repos...
     """
-    # This is script that allows to clone multiple gh-repos in one command
-    cd  $WARBERRYDIR/Tools;
-    for f in "${GITREPOS[@]}"; do `git clone $f`; done
 
-   echo """
-        DONE!
+git clone https://github.com/DanMcInerney/net-creds.git
 
-        WarBerry IS READY TO ROCK!
-    
+apt-get install onesixtyone -y
+apt-get install nikto -y
+apt-get install hydra -y
+apt-get install john -y
+apt-get install bridge-utils -y
+apt-get install w3af-console -y
+apt-get install ettercap-text-only -y
+apt-get install cryptcat -y
+apt-get install ike-scan -y
+git clone https://github.com/sqlmapproject/sqlmap.git
+git clone https://github.com/CoreSecurity/impacket.git
+git clone https://github.com/samratashok/nishang.git
+git clone https://github.com/SpiderLabs/Responder.git
+git clone https://github.com/PowerShellMafia/PowerSploit.git
+git clone https://github.com/offensive-security/exploit-database.git
+wget https://download.sysinternals.com/files/SysinternalsSuite.zip
+unzip SysinternalsSuite.zip -d sysinternals/
+
+
+
+echo """
+        All done ready to rock...
     """
-else
-    echo "ERROR: can't find apt."
-exit 1;
-fi
+
+

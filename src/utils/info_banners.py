@@ -38,7 +38,7 @@ def banner():
 
             TACTICAL EXPLOITATION
 
-v4.0                               @sec_groundzero
+v4.c1                              @sec_groundzero
                            secgroundzero@gmail.com
 ''') + bcolors.ENDC
 
@@ -66,6 +66,7 @@ Options:
   -i INTENSITY, --intensity=INTENSITY   Port scan intensity. Default: T1
   -Q, --quick                           Scan using threads. Default: Off
   -P, --poison                          Turn Poisoning on/off. Default: On
+  -t, --time                            Responder timeout time. Default: 900 seconds
   -H, --hostname                        Do not Change WarBerry hostname Default: Off
   -e, --enumeration                     Disable Enumeration mode. Default: Off
   -M, --malicious                       Enable Malicious only mode Default: Off
