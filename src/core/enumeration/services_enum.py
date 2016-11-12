@@ -14,6 +14,7 @@ GNU General Public License for more details.
 """
 
 import subprocess
+import subprocess32
 import os, os.path
 import sys, getopt
 import socket
@@ -138,7 +139,7 @@ def waf_enum(iface):
                 for host in hosts:
                         print "[*] Enumerating WAF on %s" %host.strip()
                         nm = nmap.PortScanner()
-                        nm.scan(hosts=host, arguments='-Pn -T4 --script http-waf-detect -p80,8080,443,4443,8081,8181,9090 -e ' + iface + '--open -o ../Results/wafed')
+                        nm.scan(hosts=host, arguments='-Pn -T4 --script http-waf-detect -p80,8080,443,4443,8081,8181,9090 -e ' + iface + ' --open -o ../Results/wafed')
 
         print bcolors.TITLE + "[+] Done! Results saved in /Results/wafed" + bcolors.ENDC
 
@@ -155,21 +156,13 @@ def robots_txt():
 
                 with open('../Results/web_hosts') as webs:
                         for host in webs:
-                                print "[*] Enumerating Robots TXT on %s" % host.strip()
-                                print "Attempting Port 80"
-                                subprocess.call("sudo curl -s --user-agent anagent %s/robots.txt >> ../Results/robots.txt" %host.strip(), shell = True)
-                                print "Attempting Port 8080"
-                                subprocess.call("sudo curl -s --user-agent anagent %s:8080/robots.txt >> ../Results/robots.txt" % host.strip(),shell=True)
-                                print "Attempting Port 4443"
-                                subprocess.call("sudo curl -s --user-agent anagent %s:4443/robots.txt >> ../Results/robots.txt" % host.strip(), shell=True)
-                                print "Attempting Port 8081"
-                                subprocess.call("sudo curl -s --user-agent anagent %s:8081/robots.txt >> ../Results/robots.txt" % host.strip(),shell=True)
-                                print "Attempting Port 443"
-                                subprocess.call("sudo curl -s --user-agent anagent %s:443/robots.txt >> ../Results/robots.txt" % host.strip(), shell=True)
-                                print "Attempting Port 8181"
-                                subprocess.call("sudo curl -s --user-agent anagent %s:8181/robots.txt >> ../Results/robots.txt" % host.strip(), shell=True)
-                                print "Attempting Port 9090"
-                                subprocess.call("sudo curl -s --user-agent anagent %s:9090/robots.txt >> ../Results/robots.txt" % host.strip(), shell=True)
+                                ports_to_check = [80, 8080, 4443, 8081, 443, 8181, 9090]
+                                for port in ports_to_check:
+                                        print bcolors.WARNING + "[*]" + bcolors.ENDC + " Enumerating Robots TXT on %s:%s" % (host.strip(), port)
+                                        try:
+                                                subprocess32.call("sudo curl -s --user-agent anagent %s:%s/robots.txt >> ../Results/robots.txt" % (host.strip(), port), shell=True, timeout=5)
+                                        except subprocess32.TimeoutExpired:
+                                                print bcolors.WARNING + "[!] Timed out, moving along.\n" + bcolors.ENDC
 
                 print bcolors.TITLE + "[+] Done! Results saved in /Results/robotstxt" + bcolors.ENDC
 
@@ -269,7 +262,7 @@ def snmp_enum(iface):
                 for snmp in snmps:
                         print "[*] Enumerating SNMP on %s" %snmp.strip()
                         nm = nmap.PortScanner()
-                        nm.scan(hosts=snmp, arguments='-Pn -T4 -sV -p161 -e ' + iface + '--open -o ../Results/snmp_enum')
+                        nm.scan(hosts=snmp, arguments='-Pn -T4 -sV -sU -p161 -e ' + iface + ' --open -o ../Results/snmp_enum')
 
         print bcolors.TITLE + "[+] Done! Results saved in /Results/snmp_enum" + bcolors.ENDC
 
@@ -309,7 +302,7 @@ def informix_enum(iface):
                 for inf in infdb:
                         print "[*] Enumerating Informix DB on %s" %inf.strip()
                         nm = nmap.PortScanner()
-                        nm.scan(hosts=inf, arguments='-Pn -p 9088 -e ' + iface + ' --script informix-query --script-args informix-query.username=informix,informix-query.password=informix  -o ../Results/informix_enum')
+                        nm.scan(hosts=inf, arguments='-Pn -T4 -p9088 -e ' + iface + ' --script informix-query --script-args informix-query.username=informix,informix-query.password=informix  -o ../Results/informix_enum')
 
         print bcolors.TITLE + "[+] Done! Results saved in /Results/informix_enum" + bcolors.ENDC
 
@@ -329,7 +322,7 @@ def informix_tables(iface):
                 for inf in infdb:
                         print "[*] Enumerating Informix DB Tables on %s" %inf.strip()
                         nm = nmap.PortScanner()
-                        nm.scan(hosts=inf, arguments='-Pn -p 9088 -e ' + iface + ' --script informix-tables --script-args informix-tables.username=informix,informix-tables.password=informix  -o ../Results/informix_tables')
+                        nm.scan(hosts=inf, arguments='-Pn -T4 -p9088 -e ' + iface + ' --script informix-tables --script-args informix-tables.username=informix,informix-tables.password=informix  -o ../Results/informix_tables')
 
         print bcolors.TITLE + "[+] Done! Results saved in /Results/informix_tables" + bcolors.ENDC
 
@@ -349,7 +342,7 @@ def sip_methods_enum(iface):
                 for sip in sips:
                         print "[*] Enumerating SIP Methods on %s" %sip.strip()
                         nm = nmap.PortScanner()
-                        nm.scan(hosts=sip, arguments='-Pn --script sip-methods -sU -e ' + iface + ' -p 5060  -o ../Results/sip_methods')
+                        nm.scan(hosts=sip, arguments='-Pn -T4 --script sip-methods -sU -e ' + iface + ' -p 5060  -o ../Results/sip_methods')
 
         print bcolors.TITLE + "[+] Done! Results saved in /Results/sip_methods" + bcolors.ENDC
 
@@ -368,7 +361,7 @@ def sip_users_enum(iface):
                 for sip in sips:
                         print "[*] Enumerating SIP Users on %s" %sip.strip()
                         nm = nmap.PortScanner()
-                        nm.scan(hosts=sip, arguments='-Pn --script sip-enum-users -sU -e ' + iface + ' -p 5060  -o ../Results/sip_users')
+                        nm.scan(hosts=sip, arguments='-Pn -T4 --script sip-enum-users -sU -e ' + iface + ' -p 5060  -o ../Results/sip_users')
 
         print bcolors.TITLE + "[+] Done! Results saved in /Results/sip_users" + bcolors.ENDC
 

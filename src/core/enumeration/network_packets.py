@@ -18,13 +18,12 @@ import subprocess
 from src.utils.console_colors import *
 from scapy.all import *
 
-def sniffer(iface, packets):
+def sniffer(iface, packets, expire):
         print " "
         pcap_location = "../Results/capture.pcap"
-        print bcolors.OKGREEN + "      [ IP NETWORK SNIFFING MODULE ]\n" + bcolors.ENDC
-        print "Sniffer will begin capturing %d packets" %packets
-        packets = sniff(iface=iface, count= packets, timeout=2)
-        #Time out Parameter to exit if  no packet is received - Ask Yiannis
+        print bcolors.OKGREEN + "      [ NETWORK PACKET SNIFFING MODULE ]\n" + bcolors.ENDC
+        print "Sniffer will begin capturing %d packets for %d seconds" %(packets,expire)
+        packets = sniff(iface=iface, count= packets, timeout=expire)
         wrpcap(pcap_location, packets)
         print bcolors.OKGREEN + "[+] " + bcolors.ENDC + "Capture Completed." + bcolors.ENDC + " PCAP File Saved at " + bcolors.OKGREEN + "%s!\n" %pcap_location + bcolors.ENDC
 
@@ -38,7 +37,7 @@ def pcap_parser():
                 return
 
         if os.path.isfile('../Results/pcap_results'):
-                print bcolors.WARNING + "[!] PCAP Results File Exists. Previous Results will be Overwritten\n " + bcolors.ENDC
+                print bcolors.WARNING + "[!] PCAP Results File Exists. Previous Results will be overwritten\n " + bcolors.ENDC
 
         print bcolors.TITLE + "[*] Looking for interesting data in /Results/capture.pcap" + bcolors.ENDC
         subprocess.call("sudo python ../Tools/net-creds/net-creds.py -p ../Results/capture.pcap > ../Results/pcap_results", shell = True)
@@ -48,4 +47,7 @@ def pcap_parser():
                 print bcolors.WARNING + "[-] No interesting data found in the PCAP file\n" + bcolors.ENDC
         else:
                 print bcolors.OKGREEN + "[+] Done! Results saved in /Results/pcap_results\n" + bcolors.ENDC
+
+
+
 

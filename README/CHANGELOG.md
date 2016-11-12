@@ -1,8 +1,41 @@
-## UPCOMING
+## UPCOMING ADDITIONS
 
 * Wireless Attacks
 * Vlans enumeration
 * Support for IPv6
+
+
+## Version 4c1e
+
+- Mailowner works with all interfaces now
+- Fixed a typo in the examples section
+- Created a hall of fame page in the wiki for the contributors
+- Create a page in the wiki for the conferences that the WarBerryPi was presented
+
+## Version 4c1d
+
+- Updated bootstrap for the subprocess32 installation
+- Added for subnets in discover
+- Added the mailowner python script
+
+## Version 4c1c
+
+- Added the mailowner module developed by thecarterb
+
+## Version 4c1b
+
+- Updated reporting package
+- Timeout for robots.txt enumeration
+- Updated bootstrap to include subprocess32 and pyrcap
+- Added mailowner script
+
+## Version 4c1a
+
+- Fixed a bug in WAF enumeration
+- Fixed a bug in SNMP enumeration
+- Fied a bug in zone transfers
+- Changed the services enumeration intensity
+
 
 ## Version 4c1
 
